@@ -38,6 +38,35 @@ These rules override the global workflow rules where they conflict.
   down where the bug is (file or function). Reveal the cause only if I ask
   explicitly ("just tell me").
 
+## When to refactor
+Refactor when a stage starts fighting the current design. Not up front, and
+not "later, after several stages".
+- Before each stage, Claude asks: "What design decision does this stage
+  force?" Refactor only as much as that needs ("make the change easy, then
+  make the easy change").
+- Signals it's time: a feature means editing several unrelated places, logic
+  gets copied because it's trapped inside something that does too much, or
+  something can't be tested without running the whole program.
+- When Claude notices one of these signals, it points it out and names the
+  concept, but leaves the refactor itself to me.
+- `codecrafters test` re-runs all passed stages, so it's the safety net for
+  any refactor.
+
+## When to write our own tests
+`codecrafters test` covers every stage end to end. Our own tests are worth
+adding when:
+1. A bug gets past the CodeCrafters tests. Write a test that would have
+   caught it, before the fix.
+2. Logic has many edge cases (e.g. parsing, quoting). Fast table-driven tests
+   pinpoint which case broke; a failing stage doesn't.
+3. We're about to refactor behaviour the CodeCrafters tests don't cover.
+
+If code is hard to test, treat that as design feedback ("listen to your
+tests"), not as a reason to skip the test.
+
+Optional format, **ping-pong TDD**: Claude writes a failing test that
+describes a behaviour, and I write the code that makes it pass.
+
 ## Hint levels
 When I'm stuck, start at level 1. Go to the next level only when I ask
 ("more", "next hint").
