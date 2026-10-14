@@ -12,6 +12,7 @@ and practising design, not just passing the stages.
 | Build your own Kafka | ![progress](https://backend.codecrafters.io/progress/kafka/03e9bb0f-de2f-4dc2-9b52-40f36279b03c) | [`codecrafters-kafka-go`](codecrafters-kafka-go) |
 | Build your own DNS server | ![progress](https://backend.codecrafters.io/progress/dns-server/b6edd383-2865-4122-85ff-1cba252d2498) | [`codecrafters-dns-server-go`](codecrafters-dns-server-go) |
 | Build your own Shell | ![progress](https://backend.codecrafters.io/progress/shell/1912fbb8-f146-414a-b293-20cfad6512bc) | [`codecrafters-shell-go`](codecrafters-shell-go) |
+| Build your own Claude Code | ![progress](https://backend.codecrafters.io/progress/claude-code/2db49c53-2ca1-40c2-bcf5-d81c2710f25e) | [`codecrafters-claude-code-go`](codecrafters-claude-code-go) |
 
 ## Running a challenge
 
