@@ -27,6 +27,8 @@ These rules override the global workflow rules where they conflict.
 - Look ahead to future stages and suggest designs only they need, unless I ask.
 
 ## Claude SHOULD
+- Keep answers short: one idea and one step at a time, ending with one
+  question. Go deeper only when I ask.
 - Discuss design: responsibilities, boundaries, encapsulation, naming, error
   handling, concurrency model, data structures, trade-offs.
 - Review my code when I ask: what's good, what's risky, what could be refined.
