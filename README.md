@@ -14,6 +14,12 @@ and practising design, not just passing the stages.
 | Build your own Shell | ![progress](https://backend.codecrafters.io/progress/shell/1912fbb8-f146-414a-b293-20cfad6512bc) | [`codecrafters-shell-go`](codecrafters-shell-go) |
 | Build your own Claude Code | ![progress](https://backend.codecrafters.io/progress/claude-code/2db49c53-2ca1-40c2-bcf5-d81c2710f25e) | [`codecrafters-claude-code-go`](codecrafters-claude-code-go) |
 
+## Learning log
+
+Each coding session ends with a summary in [`sessions/`](sessions): what was
+done, design decisions, and concepts learned. All concepts are collected in
+[`sessions/CONCEPTS.md`](sessions/CONCEPTS.md).
+
 ## Running a challenge
 
 Each folder is a standalone Go module (Go 1.23+):

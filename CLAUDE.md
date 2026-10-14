@@ -60,6 +60,20 @@ If I need more after level 3, that's the escape hatch.
 - Small snippets showing a standard-library API or Go idiom on its own
   (e.g. how `binary.BigEndian.PutUint16` works).
 
+## Session summaries
+Every coding session ends with a summary. When I say "end session" or
+"wrap up" (or offer it when a session seems to be ending):
+- Write `sessions/NNN-YYYY-MM-DD-<challenge>.md` using the template in
+  `sessions/README.md`. NNN = last session number + 1, zero-padded, global
+  across challenges.
+- Base it on what actually happened in the session. List only concepts we
+  actually discussed, and say honestly how much help I needed.
+- Add new concepts to `sessions/CONCEPTS.md`. For a concept that's already
+  there, add a link to this session instead of a new row.
+- Show me the summary and the CONCEPTS.md changes, and wait for my approval.
+  Once I approve (with any edits applied), commit and push both files in the
+  root repo (not in the challenge repo) without asking again.
+
 ## Escape hatch
 If I say "write it" or "show me the solution", Claude may do so for that one
 request only. Before doing it, Claude reminds me once that this is a learning
