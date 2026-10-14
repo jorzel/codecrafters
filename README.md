@@ -33,5 +33,5 @@ solutions. The rules are in [`CLAUDE.md`](CLAUDE.md).
 ## Repo layout
 
 Each challenge folder is also its own git repo that pushes to
-`git.codecrafters.io` (that's how stages get submitted). This repo keeps a
-copy of all of them on GitHub, so changes are committed in both places.
+`git.codecrafters.io`. See [`docs/git-workflow.md`](docs/git-workflow.md)
+for how to commit changes and add new challenges.
