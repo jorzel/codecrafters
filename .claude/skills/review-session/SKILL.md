@@ -34,8 +34,9 @@ Review the challenge code as it is now:
 - Draft `sessions/NNN-YYYY-MM-DD-<challenge>.md` from the template in
   `sessions/README.md`, based only on what actually happened in this session.
   Put open review points under "Next time".
-- Draft the `sessions/CONCEPTS.md` changes: new rows for new concepts,
-  extra session links for concepts already there.
+- Draft the `sessions/CONCEPTS.md` changes, following the rule in
+  `CLAUDE.md`: extend existing broad concepts first; add a row only for a
+  genuinely new theme.
 - Write both files, show them, and **wait for my approval**.
 
 ## 5. After approval

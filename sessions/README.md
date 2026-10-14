@@ -1,7 +1,8 @@
 # Sessions
 
 A learning log: one file per coding session, numbered across all challenges.
-Learned concepts are collected in [`CONCEPTS.md`](CONCEPTS.md).
+Session files are append-only; they are not edited after they are committed.
+Broad concepts are collected in [`CONCEPTS.md`](CONCEPTS.md), a living index.
 
 File name: `NNN-YYYY-MM-DD-<challenge>.md`, e.g. `001-2026-10-14-redis.md`.
 

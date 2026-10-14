@@ -99,8 +99,10 @@ Every coding session ends with a summary. When I say "end session" or
   across challenges.
 - Base it on what actually happened in the session. List only concepts we
   actually discussed, and say honestly how much help I needed.
-- Add new concepts to `sessions/CONCEPTS.md`. For a concept that's already
-  there, add a link to this session instead of a new row.
+- Update `sessions/CONCEPTS.md`, a living index of broad concepts. Prefer
+  extending an existing concept (add a session link, sharpen its summary)
+  over adding a new row. Add a row only for a genuinely new theme. The
+  granular details belong in the session file.
 - Show me the summary and the CONCEPTS.md changes, and wait for my approval.
   Once I approve (with any edits applied), commit and push both files in the
   root repo (not in the challenge repo) without asking again.
