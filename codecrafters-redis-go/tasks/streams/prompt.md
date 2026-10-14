@@ -1,0 +1,2 @@
+In tasks/streams/query_entries_from_stream.md you have a defined task. Please implement the behaviour in the existing codebase. Align with the style of current codebase (e.g. tests, name convention). Do not change existing structures, e.g `StreamItem`.
+Try rather adding new code. You can use `codecrafters test` CLI to validate your solution.
