@@ -10,18 +10,31 @@ import (
 
 const exitFailure = 1
 
+type handlerResult struct {
+	code       int
+	shouldExit bool
+}
+
+type handlerFunc = func([]string, io.Writer, io.Writer) handlerResult
+
+type ExecutableRunner interface {
+	Run(path, name string, args []string, stdout, stderr io.Writer) error
+}
+
 type ExecutableFinder interface {
 	Find(name string) (string, bool)
 }
 
 type Shell struct {
 	executableFinder ExecutableFinder
+	executableRunner ExecutableRunner
 	handlers         map[string]handlerFunc
 }
 
-func New(executableFinder ExecutableFinder) *Shell {
+func New(executableFinder ExecutableFinder, executableRunner ExecutableRunner) *Shell {
 	sh := &Shell{
 		executableFinder: executableFinder,
+		executableRunner: executableRunner,
 	}
 
 	sh.handlers = map[string]handlerFunc{
@@ -32,36 +45,51 @@ func New(executableFinder ExecutableFinder) *Shell {
 	return sh
 }
 
-func (sh *Shell) Run(input io.Reader, output io.Writer) int {
-	reader := bufio.NewReader(input)
+func (sh *Shell) Run(stdin io.Reader, stdout io.Writer, stderr io.Writer) int {
+	reader := bufio.NewReader(stdin)
 	for {
-		fmt.Fprint(output, "$ ")
+		fmt.Fprint(stdout, "$ ")
 
 		// Wait for user input
 		rawinput, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Fprintln(output, "Error reading input:", err)
+			fmt.Fprintf(stdout, "Error reading input: %s\n", err)
 			return exitFailure
 		}
 		input := strings.Trim(rawinput, "\n\r ")
 		cmd, args := eval(input)
+
+		var result handlerResult
 		fn, ok := sh.handlers[cmd]
 		if !ok {
-			fmt.Fprintf(output, "%s: command not found\n", cmd)
-			continue
+			result = sh.fallbackHandler(cmd, args, stdout, stderr)
+		} else {
+			result = fn(args, stdout, stderr)
 		}
-		result := fn(args)
+
 		if result.shouldExit {
 			return result.code
 		}
-		fmt.Fprintf(output, "%s\n", result.text)
 	}
 }
 
-func (sh *Shell) typeHandler(args []string) handlerResult {
+func (sh *Shell) fallbackHandler(cmd string, args []string, stdout io.Writer, stderr io.Writer) handlerResult {
+	fullPath, ok := sh.executableFinder.Find(cmd)
+	if !ok {
+		fmt.Fprintf(stderr, "%s: command not found\n", cmd)
+		return handlerResult{}
+	}
+	err := sh.executableRunner.Run(fullPath, cmd, args, stdout, stderr)
+	if err != nil {
+		fmt.Fprintf(stderr, "%s: %s\n", cmd, err)
+	}
+	return handlerResult{}
+}
+
+func (sh *Shell) typeHandler(args []string, stdout io.Writer, stderr io.Writer) handlerResult {
 	if len(args) == 0 {
+		fmt.Fprintf(stderr, "type: missing argument\n")
 		return handlerResult{
-			text: fmt.Sprintf("type: missing argument"),
 			code: exitFailure,
 		}
 
@@ -69,18 +97,16 @@ func (sh *Shell) typeHandler(args []string) handlerResult {
 	cmd := args[0]
 	_, ok := sh.handlers[cmd]
 	if ok {
-		return handlerResult{
-			text: fmt.Sprintf("%s is a shell builtin", cmd),
-		}
+		fmt.Fprintf(stdout, "%s is a shell builtin\n", cmd)
+		return handlerResult{}
 	}
 	fullPath, ok := sh.executableFinder.Find(cmd)
 	if ok {
-		return handlerResult{
-			text: fmt.Sprintf("%s is %s", cmd, fullPath),
-		}
+		fmt.Fprintf(stdout, "%s is %s\n", cmd, fullPath)
+		return handlerResult{}
 	}
+	fmt.Fprintf(stderr, "%s: not found\n", cmd)
 	return handlerResult{
-		text: fmt.Sprintf("%s: not found", cmd),
 		code: exitFailure,
 	}
 
@@ -91,22 +117,14 @@ func eval(input string) (string, []string) {
 	return splited[0], splited[1:]
 }
 
-type handlerResult struct {
-	text       string
-	code       int
-	shouldExit bool
-}
-
-type handlerFunc = func([]string) handlerResult
-
-func exitHandler(args []string) handlerResult {
+func exitHandler(args []string, stdout io.Writer, stderr io.Writer) handlerResult {
 	code := 0
 	if len(args) > 0 {
 		var err error
 		code, err = strconv.Atoi(args[0])
 		if err != nil {
+			fmt.Fprintf(stdout, "unexpected arg\n")
 			return handlerResult{
-				text:       fmt.Sprintf("unexpected arg"),
 				code:       exitFailure,
 				shouldExit: true,
 			}
@@ -114,14 +132,12 @@ func exitHandler(args []string) handlerResult {
 	}
 
 	return handlerResult{
-		text:       "",
 		code:       code,
 		shouldExit: true,
 	}
 }
 
-func echoHandler(args []string) handlerResult {
-	return handlerResult{
-		text: fmt.Sprintf("%s", strings.Join(args, " ")),
-	}
+func echoHandler(args []string, stdout io.Writer, stderr io.Writer) handlerResult {
+	fmt.Fprintf(stdout, "%s\n", strings.Join(args, " "))
+	return handlerResult{}
 }
