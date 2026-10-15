@@ -1,10 +1,21 @@
-package main
+package shell_test
 
 import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/codecrafters-io/shell-starter-go/app/shell"
 )
+
+// noExecutables is a finder for tests that don't depend on PATH lookup.
+type noExecutables struct{}
+
+func (noExecutables) Find(string) (string, bool) { return "", false }
+
+func run(input *strings.Reader, output *bytes.Buffer) int {
+	return shell.New(noExecutables{}).Run(input, output)
+}
 
 func TestReplRunsEveryCommandFromInput(t *testing.T) {
 	input := strings.NewReader("echo a\necho b\n")
@@ -63,6 +74,38 @@ func TestCommandOutputIsFollowedDirectlyByPrompt(t *testing.T) {
 	run(input, &output)
 
 	want := "unknown_command: not found\n$ "
+	if !strings.Contains(output.String(), want) {
+		t.Errorf("output %q does not contain %q", output.String(), want)
+	}
+}
+
+// fakeFinder finds exactly the executables listed in paths.
+type fakeFinder map[string]string
+
+func (f fakeFinder) Find(name string) (string, bool) {
+	path, ok := f[name]
+	return path, ok
+}
+
+func TestTypeReportsFullPathOfExecutable(t *testing.T) {
+	finder := fakeFinder{"mycmd": "/opt/bin/mycmd"}
+	var output bytes.Buffer
+
+	shell.New(finder).Run(strings.NewReader("type mycmd\n"), &output)
+
+	want := "mycmd is /opt/bin/mycmd\n"
+	if !strings.Contains(output.String(), want) {
+		t.Errorf("output %q does not contain %q", output.String(), want)
+	}
+}
+
+func TestTypeReportsBuiltinEvenWhenExecutableWithSameNameExists(t *testing.T) {
+	finder := fakeFinder{"echo": "/bin/echo"}
+	var output bytes.Buffer
+
+	shell.New(finder).Run(strings.NewReader("type echo\n"), &output)
+
+	want := "echo is a shell builtin\n"
 	if !strings.Contains(output.String(), want) {
 		t.Errorf("output %q does not contain %q", output.String(), want)
 	}
