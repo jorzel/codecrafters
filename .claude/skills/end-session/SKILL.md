@@ -1,10 +1,10 @@
 ---
-name: review-session
+name: end-session
 description: End a codecrafters coding session — design review of the current challenge plus a session summary for approval.
 disable-model-invocation: true
 ---
 
-# Review session
+# End session
 
 Follow the learning-mode rules in the root `CLAUDE.md`. Do not write or
 change challenge code here.
