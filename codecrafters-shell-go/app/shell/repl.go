@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const exitFailure = 1
+
 type ExecutableFinder interface {
 	Find(name string) (string, bool)
 }
@@ -39,7 +41,7 @@ func (sh *Shell) Run(input io.Reader, output io.Writer) int {
 		rawinput, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Fprintln(output, "Error reading input:", err)
-			return 1
+			return exitFailure
 		}
 		input := strings.Trim(rawinput, "\n\r ")
 		cmd, args := eval(input)
@@ -60,7 +62,7 @@ func (sh *Shell) typeHandler(args []string) handlerResult {
 	if len(args) == 0 {
 		return handlerResult{
 			text: fmt.Sprintf("type: missing argument"),
-			code: 1,
+			code: exitFailure,
 		}
 
 	}
@@ -69,19 +71,17 @@ func (sh *Shell) typeHandler(args []string) handlerResult {
 	if ok {
 		return handlerResult{
 			text: fmt.Sprintf("%s is a shell builtin", cmd),
-			code: 0,
 		}
 	}
 	fullPath, ok := sh.executableFinder.Find(cmd)
 	if ok {
 		return handlerResult{
 			text: fmt.Sprintf("%s is %s", cmd, fullPath),
-			code: 0,
 		}
 	}
 	return handlerResult{
 		text: fmt.Sprintf("%s: not found", cmd),
-		code: 1,
+		code: exitFailure,
 	}
 
 }
@@ -107,7 +107,7 @@ func exitHandler(args []string) handlerResult {
 		if err != nil {
 			return handlerResult{
 				text:       fmt.Sprintf("unexpected arg"),
-				code:       1,
+				code:       exitFailure,
 				shouldExit: true,
 			}
 		}
@@ -122,7 +122,6 @@ func exitHandler(args []string) handlerResult {
 
 func echoHandler(args []string) handlerResult {
 	return handlerResult{
-		code: 0,
 		text: fmt.Sprintf("%s", strings.Join(args, " ")),
 	}
 }
