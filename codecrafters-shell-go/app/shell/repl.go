@@ -4,11 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 )
 
-const exitFailure = 1
+const (
+	exitSuccess         = 0
+	exitFailure         = 1
+	exitCommandNotFound = 127
+)
 
 type handlerResult struct {
 	code       int
@@ -41,6 +46,7 @@ func New(executableFinder ExecutableFinder, executableRunner ExecutableRunner) *
 		"exit": exitHandler,
 		"type": sh.typeHandler,
 		"echo": echoHandler,
+		"pwd":  pwdHandler,
 	}
 	return sh
 }
@@ -53,7 +59,7 @@ func (sh *Shell) Run(stdin io.Reader, stdout io.Writer, stderr io.Writer) int {
 		// Wait for user input
 		rawinput, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Fprintf(stdout, "Error reading input: %s\n", err)
+			fmt.Fprintf(stderr, "Error reading input: %s\n", err)
 			return exitFailure
 		}
 		input := strings.Trim(rawinput, "\n\r ")
@@ -77,7 +83,9 @@ func (sh *Shell) fallbackHandler(cmd string, args []string, stdout io.Writer, st
 	fullPath, ok := sh.executableFinder.Find(cmd)
 	if !ok {
 		fmt.Fprintf(stderr, "%s: command not found\n", cmd)
-		return handlerResult{}
+		return handlerResult{
+			code: exitCommandNotFound,
+		}
 	}
 	err := sh.executableRunner.Run(fullPath, cmd, args, stdout, stderr)
 	if err != nil {
@@ -88,7 +96,7 @@ func (sh *Shell) fallbackHandler(cmd string, args []string, stdout io.Writer, st
 
 func (sh *Shell) typeHandler(args []string, stdout io.Writer, stderr io.Writer) handlerResult {
 	if len(args) == 0 {
-		fmt.Fprintf(stderr, "type: missing argument\n")
+		fmt.Fprintln(stderr, "type: missing argument")
 		return handlerResult{
 			code: exitFailure,
 		}
@@ -112,18 +120,31 @@ func (sh *Shell) typeHandler(args []string, stdout io.Writer, stderr io.Writer) 
 
 }
 
-func eval(input string) (string, []string) {
-	splited := strings.Split(input, " ")
-	return splited[0], splited[1:]
+func pwdHandler(args []string, stdout io.Writer, stderr io.Writer) handlerResult {
+	if len(args) > 0 {
+		fmt.Fprintln(stderr, "pwd: too many arguments")
+		return handlerResult{
+			code: exitFailure,
+		}
+	}
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(stderr, "pwd: %s\n", err)
+		return handlerResult{
+			code: exitFailure,
+		}
+	}
+	fmt.Fprintln(stdout, dir)
+	return handlerResult{}
 }
 
-func exitHandler(args []string, stdout io.Writer, stderr io.Writer) handlerResult {
-	code := 0
+func exitHandler(args []string, _ io.Writer, stderr io.Writer) handlerResult {
+	code := exitSuccess
 	if len(args) > 0 {
 		var err error
 		code, err = strconv.Atoi(args[0])
 		if err != nil {
-			fmt.Fprintf(stdout, "unexpected arg\n")
+			fmt.Fprintln(stderr, "unexpected arg")
 			return handlerResult{
 				code:       exitFailure,
 				shouldExit: true,
@@ -137,7 +158,12 @@ func exitHandler(args []string, stdout io.Writer, stderr io.Writer) handlerResul
 	}
 }
 
-func echoHandler(args []string, stdout io.Writer, stderr io.Writer) handlerResult {
+func echoHandler(args []string, stdout io.Writer, _ io.Writer) handlerResult {
 	fmt.Fprintf(stdout, "%s\n", strings.Join(args, " "))
 	return handlerResult{}
+}
+
+func eval(input string) (string, []string) {
+	splited := strings.Split(input, " ")
+	return splited[0], splited[1:]
 }

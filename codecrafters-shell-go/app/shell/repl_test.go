@@ -3,6 +3,7 @@ package shell_test
 import (
 	"bytes"
 	"io"
+	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -83,6 +84,43 @@ func TestNotFoundMessageGoesToStderr(t *testing.T) {
 	want := "unknown_command: not found\n"
 	if !strings.Contains(stderr.String(), want) {
 		t.Errorf("stderr %q does not contain %q", stderr.String(), want)
+	}
+}
+
+func TestPwdPrintsCurrentWorkingDirectory(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getting working directory: %v", err)
+	}
+	input := strings.NewReader("pwd\n")
+	var output bytes.Buffer
+	var stderr bytes.Buffer
+
+	run(input, &output, &stderr)
+
+	want := wd + "\n"
+	if !strings.Contains(output.String(), want) {
+		t.Errorf("output %q does not contain %q", output.String(), want)
+	}
+}
+
+func TestPwdWithArgumentsFails(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getting working directory: %v", err)
+	}
+	input := strings.NewReader("pwd extra\n")
+	var output bytes.Buffer
+	var stderr bytes.Buffer
+
+	run(input, &output, &stderr)
+
+	want := "pwd: too many arguments\n"
+	if !strings.Contains(stderr.String(), want) {
+		t.Errorf("stderr %q does not contain %q", stderr.String(), want)
+	}
+	if strings.Contains(output.String(), wd) {
+		t.Errorf("output %q: pwd with arguments should not print the directory", output.String())
 	}
 }
 
