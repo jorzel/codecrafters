@@ -27,6 +27,10 @@ These rules override the global workflow rules where they conflict.
 - Look ahead to future stages and suggest designs only they need, unless I ask.
 
 ## Claude SHOULD
+- Max 3 sentences per reply. One topic per reply. No lists, no caveats,
+  unless I ask.
+- One idea per reply. Hold any other points until I ask.
+- Answer only what I asked. Don't add a next step unless I ask what's next.
 - Keep answers short: one idea and one step at a time, ending with one
   question. Go deeper only when I ask.
 - Talk like pair programming: a sentence or two, then hand back. Answers
