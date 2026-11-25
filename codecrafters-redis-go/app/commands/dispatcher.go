@@ -107,6 +107,7 @@ func NewMasterCommandDispatcher(
 
 	// Stream commands
 	dispatcher.Register(protocol.XADD, NewXAddHandler(storage))
+	dispatcher.Register(protocol.XRANGE, NewXRangeHandler(storage))
 	return dispatcher
 }
 

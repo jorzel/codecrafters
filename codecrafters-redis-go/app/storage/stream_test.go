@@ -25,8 +25,8 @@ func TestStreamFailedAddItem(t *testing.T) {
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
 			stream := NewStreamRecord()
-			stream.AddItem("2-1", map[string]string{"field1": "value1"})
-			id, err := stream.AddItem(tt.id, map[string]string{"field1": "value1"})
+			stream.AddItem("2-1", []Field{{Name: "field1", Value: "value1"}})
+			id, err := stream.AddItem(tt.id, []Field{{Name: "field1", Value: "value1"}})
 			require.Error(t, err)
 			assert.Equal(t, StreamID{}, id)
 		})
@@ -54,8 +54,8 @@ func TestStreamAddItem(t *testing.T) {
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
 			stream := NewStreamRecord()
-			stream.AddItem("2-1", map[string]string{"field1": "value1"})
-			id, err := stream.AddItem(tt.id, map[string]string{"field1": "value1"})
+			stream.AddItem("2-1", []Field{{Name: "field1", Value: "value1"}})
+			id, err := stream.AddItem(tt.id, []Field{{Name: "field1", Value: "value1"}})
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, id)
 		})

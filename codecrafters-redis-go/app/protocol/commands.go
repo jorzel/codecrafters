@@ -26,6 +26,7 @@ const (
 	UNSUBSCRIBE = "UNSUBSCRIBE"
 	WAIT        = "WAIT"
 	XADD        = "XADD"
+	XRANGE      = "XRANGE"
 	ZADD        = "ZADD"
 	ZCARD       = "ZCARD"
 	ZREM        = "ZREM"

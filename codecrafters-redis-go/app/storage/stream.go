@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -40,7 +41,7 @@ func (id StreamID) String() string {
 	}
 }
 
-func parseStreamID(s string) (StreamID, error) {
+func parseStreamID(s string, seqDefault uint64) (StreamID, error) {
 	switch s {
 	case "*":
 		return StreamID{Type: IDAuto}, nil
@@ -49,7 +50,10 @@ func parseStreamID(s string) (StreamID, error) {
 	case "+":
 		return StreamID{Type: IDMax}, nil
 	}
+	return parseMsAndSeq(s, seqDefault)
+}
 
+func parseMsAndSeq(s string, seqDefault uint64) (StreamID, error) {
 	parts := strings.Split(s, "-")
 	if len(parts) == 1 {
 		// Only milliseconds part
@@ -57,7 +61,7 @@ func parseStreamID(s string) (StreamID, error) {
 		if err != nil {
 			return StreamID{}, fmt.Errorf("invalid ID")
 		}
-		return StreamID{Type: IDConcrete, Ms: ms, Seq: 0}, nil
+		return StreamID{Type: IDConcrete, Ms: ms, Seq: seqDefault}, nil
 	}
 
 	if len(parts) == 2 {
@@ -76,8 +80,32 @@ func parseStreamID(s string) (StreamID, error) {
 		}
 		return StreamID{Type: IDConcrete, Ms: ms, Seq: seq}, nil
 	}
-
 	return StreamID{}, fmt.Errorf("invalid stream ID format")
+}
+
+func ParseRangeEnd(s string) (StreamID, error) {
+	return parseRange(s, math.MaxUint64)
+}
+
+func ParseRangeStart(s string) (StreamID, error) {
+	return parseRange(s, 0)
+}
+
+func parseRange(s string, seqDefault uint64) (StreamID, error) {
+	id, err := parseStreamID(s, seqDefault)
+	if err != nil {
+		return StreamID{}, err
+	}
+	if id.Type == IDAuto || id.Type == IDMsAuto {
+		return StreamID{}, fmt.Errorf("* cannot be in a stream end")
+	}
+	if id.Type == IDMax {
+		return StreamID{Type: IDConcrete, Ms: math.MaxUint64, Seq: math.MaxUint64}, nil
+	}
+	if id.Type == IDMin {
+		return StreamID{Type: IDConcrete, Ms: 0, Seq: 0}, nil
+	}
+	return id, nil
 }
 
 func CompareIDs(a, b StreamID) int {
@@ -117,17 +145,26 @@ func keyFromMs(ms uint64) string {
 // convenience: now() as ms
 func nowMs() uint64 { return uint64(time.Now().UnixNano() / 1e6) }
 
+type Field struct {
+	Name  string
+	Value string
+}
+
 // StreamItem represents a single entry in a stream
 type StreamItem struct {
 	ID     StreamID
-	fields map[string]string
+	fields []Field
 }
 
-func NewStreamItem(id StreamID, fields map[string]string) StreamItem {
+func NewStreamItem(id StreamID, fields []Field) StreamItem {
 	return StreamItem{
 		ID:     id,
 		fields: fields,
 	}
+}
+
+func (si *StreamItem) Fields() []Field {
+	return si.fields
 }
 
 type StreamRecord struct {
@@ -143,6 +180,19 @@ func NewStreamRecord() *StreamRecord {
 	}
 }
 
+func (sr *StreamRecord) Range(start StreamID, end StreamID) []StreamItem {
+	sr.mu.Lock()
+	defer sr.mu.Unlock()
+
+	items := []StreamItem{}
+	for _, item := range sr.items {
+		if CompareIDs(item.ID, start) >= 0 && CompareIDs(item.ID, end) <= 0 {
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
 func (sr *StreamRecord) getLastID() StreamID {
 	if len(sr.items) == 0 {
 		return StreamID{}
@@ -150,11 +200,11 @@ func (sr *StreamRecord) getLastID() StreamID {
 	return sr.items[len(sr.items)-1].ID
 }
 
-func (sr *StreamRecord) AddItem(idString string, fields map[string]string) (StreamID, error) {
+func (sr *StreamRecord) AddItem(idString string, fields []Field) (StreamID, error) {
 	sr.mu.Lock()
 	defer sr.mu.Unlock()
 
-	id, err := parseStreamID(idString)
+	id, err := parseStreamID(idString, 0)
 	if err != nil {
 		return StreamID{}, err
 	}
