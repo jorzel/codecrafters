@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/codecrafters-io/redis-starter-go/app/skiplist" // adjust import path
+	"github.com/codecrafters-io/redis-starter-go/app/datastructures/skiplist"
 )
 
 // assertOrder walks level-0 nodes and returns their members.
